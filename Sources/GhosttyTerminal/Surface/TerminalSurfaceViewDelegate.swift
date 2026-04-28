@@ -39,3 +39,18 @@ public protocol TerminalSurfaceBellDelegate: TerminalSurfaceViewDelegate {
 public protocol TerminalSurfaceCloseDelegate: TerminalSurfaceViewDelegate {
     func terminalDidClose(processAlive: Bool)
 }
+
+public struct TerminalCommandFinished: Sendable, Equatable {
+    public let exitCode: Int16?
+    public let durationNanoseconds: UInt64
+
+    public init(exitCode: Int16?, durationNanoseconds: UInt64) {
+        self.exitCode = exitCode
+        self.durationNanoseconds = durationNanoseconds
+    }
+}
+
+@MainActor
+public protocol TerminalSurfaceCommandFinishedDelegate: TerminalSurfaceViewDelegate {
+    func terminalCommandFinished(_ event: TerminalCommandFinished)
+}

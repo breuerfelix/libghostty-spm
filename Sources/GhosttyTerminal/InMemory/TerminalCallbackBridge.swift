@@ -63,6 +63,21 @@ final class TerminalCallbackBridge {
             TerminalDebugLog.log(.actions, "callback action=config_change")
             onRenderRequest?()
 
+        case GHOSTTY_ACTION_COMMAND_FINISHED:
+            let payload = action.action.command_finished
+            let exitCode = payload.exit_code >= 0 ? payload.exit_code : nil
+            TerminalDebugLog.log(
+                .actions,
+                "callback action=command_finished exitCode=\(exitCode.map(String.init) ?? "nil") durationNs=\(payload.duration)"
+            )
+            (delegate as? any TerminalSurfaceCommandFinishedDelegate)?
+                .terminalCommandFinished(
+                    TerminalCommandFinished(
+                        exitCode: exitCode,
+                        durationNanoseconds: payload.duration
+                    )
+                )
+
         default:
             TerminalDebugLog.log(
                 .actions,

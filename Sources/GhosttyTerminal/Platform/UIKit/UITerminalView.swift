@@ -60,6 +60,18 @@
             set { core.configuration = newValue }
         }
 
+        public func requestSurfaceClose() {
+            core.requestSurfaceClose()
+        }
+
+        public func surfaceProcessExited() -> Bool {
+            core.surfaceProcessExited()
+        }
+
+        public func freeSurface() {
+            core.freeSurface()
+        }
+
         var surface: TerminalSurface? {
             core.surface
         }

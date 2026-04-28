@@ -218,7 +218,18 @@ public final class TerminalSurface {
         return ghostty_surface_mouse_captured(s)
     }
 
+    var processExited: Bool {
+        guard let s = surface else { return true }
+        return ghostty_surface_process_exited(s)
+    }
+
     // MARK: - Lifecycle
+
+    func requestClose() {
+        guard let s = surface else { return }
+        TerminalDebugLog.log(.lifecycle, "surface request close")
+        ghostty_surface_request_close(s)
+    }
 
     func free() {
         guard !hasBeenFreed, let s = surface else { return }
