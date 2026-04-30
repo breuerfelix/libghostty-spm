@@ -257,6 +257,11 @@
             var consumedFlags = translationModifiers ?? modifierFlags
             consumedFlags.remove(.control)
             consumedFlags.remove(.command)
+            if !shouldConsumeTextGeneratingModifiers {
+                consumedFlags.remove(.shift)
+                consumedFlags.remove(.option)
+                consumedFlags.remove(.capsLock)
+            }
             input.consumed_mods = TerminalInputModifiers(from: consumedFlags).ghosttyMods
 
             if type == .keyDown || type == .keyUp,
@@ -294,11 +299,23 @@
 
             return filtered
         }
+
+        private var shouldConsumeTextGeneratingModifiers: Bool {
+            guard let filtered = filteredCharacters, !filtered.isEmpty else {
+                return false
+            }
+            guard filtered.count == 1,
+                  let scalar = filtered.unicodeScalars.first
+            else {
+                return true
+            }
+            return !scalar.isASCIIControl
+        }
     }
 
     extension UnicodeScalar {
         var isASCIIControl: Bool {
-            value < 0x20
+            value < 0x20 || value == 0x7F
         }
     }
 #endif
