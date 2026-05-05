@@ -42,6 +42,20 @@
             return true
         }
 
+        nonisolated static func shouldConsumeTextGeneratingModifiers(
+            for filteredCharacters: String?
+        ) -> Bool {
+            guard let filteredCharacters, !filteredCharacters.isEmpty else {
+                return false
+            }
+            guard filteredCharacters.count == 1,
+                  let scalar = filteredCharacters.unicodeScalars.first
+            else {
+                return true
+            }
+            return !scalar.isASCIIControl
+        }
+
         func handleKeyDown(with event: NSEvent) {
             guard let view, let surface = view.surface else { return }
 
@@ -300,7 +314,9 @@
             var consumedFlags = translationModifiers ?? modifierFlags
             consumedFlags.remove(.control)
             consumedFlags.remove(.command)
-            if !shouldConsumeTextGeneratingModifiers {
+            if !TerminalKeyEventHandler.shouldConsumeTextGeneratingModifiers(
+                for: filteredCharacters
+            ) {
                 consumedFlags.remove(.shift)
                 consumedFlags.remove(.option)
                 consumedFlags.remove(.capsLock)
@@ -341,18 +357,6 @@
             }
 
             return filtered
-        }
-
-        private var shouldConsumeTextGeneratingModifiers: Bool {
-            guard let filtered = filteredCharacters, !filtered.isEmpty else {
-                return false
-            }
-            guard filtered.count == 1,
-                  let scalar = filtered.unicodeScalars.first
-            else {
-                return true
-            }
-            return !scalar.isASCIIControl
         }
     }
 

@@ -148,6 +148,51 @@ struct TerminalHardwareKeyRouterTests {
         )
     }
 
+    @Test
+    func appKitControlCharactersPreserveShiftForKeyBindingMatching() throws {
+        let shiftEnter = try makeAppKitKeyEvent(
+            modifierFlags: [.shift],
+            characters: "\r",
+            charactersIgnoringModifiers: "\r",
+            keyCode: 0x24
+        )
+        let shiftEnterInput = shiftEnter.buildKeyInput(
+            action: GHOSTTY_ACTION_PRESS,
+            translationModifiers: shiftEnter.modifierFlags
+        )
+        #expect(shiftEnterInput.mods.rawValue & GHOSTTY_MODS_SHIFT.rawValue != 0)
+        #expect(shiftEnterInput.consumed_mods.rawValue & GHOSTTY_MODS_SHIFT.rawValue == 0)
+
+        let shiftTab = try makeAppKitKeyEvent(
+            modifierFlags: [.shift],
+            characters: "\t",
+            charactersIgnoringModifiers: "\t",
+            keyCode: 0x30
+        )
+        let shiftTabInput = shiftTab.buildKeyInput(
+            action: GHOSTTY_ACTION_PRESS,
+            translationModifiers: shiftTab.modifierFlags
+        )
+        #expect(shiftTabInput.mods.rawValue & GHOSTTY_MODS_SHIFT.rawValue != 0)
+        #expect(shiftTabInput.consumed_mods.rawValue & GHOSTTY_MODS_SHIFT.rawValue == 0)
+    }
+
+    @Test
+    func appKitPrintableTextStillConsumesShift() throws {
+        let event = try makeAppKitKeyEvent(
+            modifierFlags: [.shift],
+            characters: "A",
+            charactersIgnoringModifiers: "a",
+            keyCode: 0x00
+        )
+        let input = event.buildKeyInput(
+            action: GHOSTTY_ACTION_PRESS,
+            translationModifiers: event.modifierFlags
+        )
+        #expect(input.mods.rawValue & GHOSTTY_MODS_SHIFT.rawValue != 0)
+        #expect(input.consumed_mods.rawValue & GHOSTTY_MODS_SHIFT.rawValue != 0)
+    }
+
     /// Quote HID 0x34 must translate to AppKit keycode 0x27, not fall
     /// through to `0` (which is AppKit's keycode for the `A` key) nor to
     /// `GHOSTTY_KEY_QUOTE.rawValue` (which happens to equal AppKit's
@@ -366,6 +411,28 @@ struct TerminalHardwareKeyRouterTests {
         #expect(
             !TerminalKeyEventHandler.shouldUseDirectInput(
                 modifierFlags: [.command]
+            )
+        )
+    }
+
+    private func makeAppKitKeyEvent(
+        modifierFlags: NSEvent.ModifierFlags,
+        characters: String,
+        charactersIgnoringModifiers: String,
+        keyCode: UInt16
+    ) throws -> NSEvent {
+        try #require(
+            NSEvent.keyEvent(
+                with: .keyDown,
+                location: .zero,
+                modifierFlags: modifierFlags,
+                timestamp: 1,
+                windowNumber: 0,
+                context: nil,
+                characters: characters,
+                charactersIgnoringModifiers: charactersIgnoringModifiers,
+                isARepeat: false,
+                keyCode: keyCode
             )
         )
     }
