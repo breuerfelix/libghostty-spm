@@ -17,6 +17,7 @@ public final class TerminalViewState {
 
     public var configuration: TerminalSurfaceOptions = .init()
     public var onClose: ((Bool) -> Void)?
+    public var onCommandFinished: ((Int?, UInt64) -> Void)?
     public internal(set) var controller: TerminalController
 
     public convenience init() {

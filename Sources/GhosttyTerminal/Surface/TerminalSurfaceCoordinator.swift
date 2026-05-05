@@ -251,6 +251,14 @@ final class TerminalSurfaceCoordinator {
 
     // MARK: - Cleanup
 
+    func requestSurfaceClose() {
+        surface?.requestClose()
+    }
+
+    func surfaceProcessExited() -> Bool {
+        surface?.processExited ?? true
+    }
+
     func freeSurface() {
         TerminalDebugLog.log(.lifecycle, "free surface")
         tearDownSurface(removingBridgeFrom: controller)
