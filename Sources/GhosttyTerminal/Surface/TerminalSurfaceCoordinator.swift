@@ -30,6 +30,9 @@ final class TerminalSurfaceCoordinator {
     var configuration: TerminalSurfaceOptions = .init() {
         didSet {
             guard !configuration.isEquivalent(to: oldValue) else { return }
+            if applyFontSizeChangeInPlace(from: oldValue, to: configuration) {
+                return
+            }
             rebuildIfReady()
         }
     }
@@ -331,6 +334,41 @@ final class TerminalSurfaceCoordinator {
                 )
             )
         }
+    }
+
+    private func applyFontSizeChangeInPlace(
+        from previous: TerminalSurfaceOptions,
+        to next: TerminalSurfaceOptions
+    ) -> Bool {
+        guard previous.backend.isEquivalent(to: next.backend) else { return false }
+        guard previous.workingDirectory == next.workingDirectory else { return false }
+        guard previous.context == next.context else { return false }
+        guard previous.fontSize != next.fontSize else { return false }
+        guard let surface else { return false }
+
+        let action: String
+        if let fontSize = next.fontSize {
+            action = "set_font_size:\(formatFontSizeActionValue(fontSize))"
+        } else {
+            action = "reset_font_size"
+        }
+
+        guard surface.performBindingAction(action) else { return false }
+        TerminalDebugLog.log(.actions, "applied in-place font action=\(action)")
+        synchronizeMetrics()
+        requestImmediateTick()
+        return true
+    }
+
+    private func formatFontSizeActionValue(_ fontSize: Float) -> String {
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 2
+        formatter.usesGroupingSeparator = false
+        return formatter.string(from: NSNumber(value: fontSize))
+            ?? String(format: "%.2f", locale: Locale(identifier: "en_US_POSIX"), Double(fontSize))
     }
 
     private static func monotonicTimestamp() -> TimeInterval {
